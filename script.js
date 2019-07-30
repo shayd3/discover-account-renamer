@@ -1,17 +1,44 @@
-var accountNameData = JSON.parse(loadAccountNameData());
+$(document).ready(function(){
+    var accountNameData = JSON.parse(loadAccountNameData());
+    var currentLocation = getCurrentLocation();
+    var accountNameGroupList = getAccountList(currentLocation);
 
-// Determins if you are in the portal, card details page, or bank details page
-var currentLocation = getCurrentLocation();
+    console.log("Found", accountNameGroupList.length, "accounts!", accountNameGroupList);
 
-var accountNameGroupList = getAccountList(currentLocation);
+    changeAccountNames(accountNameGroupList, accountNameData);
 
-console.log("Found", accountNameGroupList.length, "accounts!");
+});
 
-if(accountNameData != null) {
-    for(let i = 0; i < accountNameGroupList.length; i++) {
-        let accountNumber = $(accountNameGroupList[i]).children('p.card-last-digits').text().replace('(','').replace(')','').trim();
-        if(accountNameData[accountNumber]) {
-            $(accountNameGroupList[i]).children('p.account-name').text(accountNameData[accountNumber])
+/*************************** 
+        Listeners
+ ***************************/
+chrome.runtime.onMessage.addListener(
+    function(request, sender, sendResponse) {
+      if( request.message === "clicked_browser_action" ) {
+        var firstHref = $("a[href^='http']").eq(0).attr("href");
+  
+        console.log(firstHref);
+  
+        // This line is new!
+        chrome.runtime.sendMessage({"message": "open_new_tab", "url": firstHref});
+      }
+    }
+  );
+
+/**
+ * When accountNameData exists, change account names contained in accountNameGroupList
+ * @param {string[]} accountNameGroupList 
+ * @param {object} accountNameData 
+ */
+function changeAccountNames(accountNameGroupList, accountNameData) {
+    if(accountNameData != null) {
+        for(let i = 0; i < accountNameGroupList.length; i++) {
+            let accountNumber = $(accountNameGroupList[i]).children('p.card-last-digits').text().replace('(','').replace(')','').trim();
+            console.log("accountNumber",accountNumber);
+            if(accountNameData[accountNumber]) {
+                $(accountNameGroupList[i]).children('p.account-name').text(accountNameData[accountNumber])
+            }
+
         }
     }
 }
@@ -26,14 +53,24 @@ function saveAccountNameData(obj) {
     localStorage.saveData = JSON.stringify(saveData);
 }
 
+/**
+ * When page loads, load saveData object from localStorage
+ */
 function loadAccountNameData() {
     return localStorage.saveData || null;
 }
 
+/**
+ * When getCurrentLocation() is called, determine what portal page user is on
+ */
 function getCurrentUrl() {
     return window.location.toString();
 }
 
+/**
+ * Since there is different pages where user can see bank accounts,
+ * we need to a way to quickly identify what elements to look for
+ */
 function getCurrentLocation() {
     let currentUrl = getCurrentUrl();
     if(currentUrl.includes("portal"))
@@ -46,6 +83,10 @@ function getCurrentLocation() {
         return null;
 }
 
+/**
+ * Based on what page user is on, look for different elements to retrieve account list
+ * @param {String} location 
+ */
 function getAccountList(location) {
     switch(location){
         // Contains p.account-name and p.card-last-digits

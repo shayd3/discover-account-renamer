@@ -3,7 +3,10 @@
     "version": "1.0",
     "description": "Instead of 'Savings Account (1234)'... How about 'Move Out Fund?' or maybe 'New PC?' With this extension, you can do that! Only works on Discover Savings accounts for now.",
     "browser_action": {
-        "default_popup": "popup/popup.html"
+        "default_title": "Discover Bank Account Renamer"
+    },
+    "background": {
+        "scripts": ["background.js"]
     },
     "content_scripts": [
         {
@@ -16,7 +19,8 @@
             "js": [
                 "assets/jquery-3.3.1.slim.min.js",
                 "script.js"
-            ]
+            ],
+            "run_at": "document_end"
         }
     ],
     "permissions": [
