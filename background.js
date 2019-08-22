@@ -1,22 +1,26 @@
-// background.js
+  // chrome.runtime.onMessage.addListener(
+  //   function(request, sender, sendResponse) {
+  //     if( request.message === "account_name_group_list" ) {
+  //       chrome.runtime.sendMessage({
+  //         message: "account_name_group_list_popup",
+  //         data: request.data
+  //       });
+  //     }
+  //   }
+  // );
 
-// // Called when the user clicks on the browser action.
-// chrome.browserAction.onLoad.addListener(function(tab) {
-//     // Send a message to the active tab
-//     chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
-//       var activeTab = tabs[0];
-//       chrome.tabs.sendMessage(activeTab.id, {"message": "clicked_browser_action"});
-//     });
-//   });
-  
-  // This block is new!
   chrome.runtime.onMessage.addListener(
     function(request, sender, sendResponse) {
-      if( request.message === "account_name_group_list" ) {
+      // Send request to script.js for account_name_group_list
+      console.log("I received this!");
+      if( request.message === "account_name_group_list_request_popup" ) {
         chrome.runtime.sendMessage({
-          message: "account_name_group_list_popup",
-          data: request.data
+          message: "account_name_group_list_request"
+        }, function(response){
+          console.log(response);
+          sendResponse(response);
         });
       }
     }
   );
+  

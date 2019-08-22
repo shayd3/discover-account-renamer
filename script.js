@@ -1,27 +1,39 @@
-$(document).ready(function(){
+var accountNameData;
+var currentLocation;
+var accountNameGroupList;
+
+$(document).ready(function () {
     // Load account data if exists
-    var accountNameData = JSON.parse(loadAccountNameData());
+    accountNameData = JSON.parse(loadAccountNameData());
 
     // Grab current url 
-    var currentLocation = getCurrentLocation();
+    currentLocation = getCurrentLocation();
 
     // Based on url, find accounts on page
-    var accountNameGroupList = getAccountList(currentLocation);
+    accountNameGroupList = getAccountList(currentLocation);
 
     console.log("Found", accountNameGroupList.length, "accounts!", accountNameGroupList);
 
     changeAccountNames(accountNameGroupList, accountNameData);
-
-    // After name changes, send list of accounts to background.js to send to popup.js
-    chrome.runtime.sendMessage({
-        message:"account_name_group_list",
-        data: {
-            accountNameGroupList: accountNameGroupList,
-            url: currentLocation
-        }
-    });
-
 });
+
+/***********************************
+ *********** Listeners *************
+ ***********************************/
+chrome.runtime.onMessage.addListener(
+    function (request, sender, sendResponse) {
+        // Listen for background.js message
+        if (request.message === "account_name_group_list_request") {
+            sendResponse({
+                message: "account_name_group_list",
+                data: {
+                    accountNameGroupList: accountNameGroupList,
+                    url: currentLocation
+                }
+            })
+        }
+    }
+);
 
 /**
  * When accountNameData exists, change account names contained in accountNameGroupList
@@ -29,11 +41,11 @@ $(document).ready(function(){
  * @param {object} accountNameData 
  */
 function changeAccountNames(accountNameGroupList, accountNameData) {
-    if(accountNameData != null) {
-        for(let i = 0; i < accountNameGroupList.length; i++) {
-            let accountNumber = $(accountNameGroupList[i]).children('p.card-last-digits').text().replace('(','').replace(')','').trim();
-            console.log("accountNumber",accountNumber);
-            if(accountNameData[accountNumber]) {
+    if (accountNameData != null) {
+        for (let i = 0; i < accountNameGroupList.length; i++) {
+            let accountNumber = $(accountNameGroupList[i]).children('p.card-last-digits').text().replace('(', '').replace(')', '').trim();
+            console.log("accountNumber", accountNumber);
+            if (accountNameData[accountNumber]) {
                 $(accountNameGroupList[i]).children('p.account-name').text(accountNameData[accountNumber])
             }
 
@@ -55,9 +67,9 @@ function saveAccountNameData(obj) {
  * When page loads, load saveData object from localStorage
  */
 function loadAccountNameData() {
-    return localStorage.saveData || null;
+    //return localStorage.saveData || null;
     // For testing purposes
-    //return "{\"1234\":\"test-1\",\"5687\":\"test-2\",\"345\":\"test-3\",\"2345\":\"test-4\"}";
+    return "{\"8139\":\"test-1\",\"5309\":\"test-2\",\"3168\":\"test-3\",\"8798\":\"test-4\"}";
 }
 
 /**
@@ -73,13 +85,13 @@ function getCurrentUrl() {
  */
 function getCurrentLocation() {
     let currentUrl = getCurrentUrl();
-    if(currentUrl.includes("portal"))
+    if (currentUrl.includes("portal"))
         return "portal";
     else if (currentUrl.includes("cardmembersvcs"))
         return "cardmembersvcs";
     else if (currentUrl.includes("bankac"))
         return "bankac";
-    else 
+    else
         return null;
 }
 
@@ -88,7 +100,7 @@ function getCurrentLocation() {
  * @param {String} location 
  */
 function getAccountList(location) {
-    switch(location){
+    switch (location) {
         // Contains p.account-name and p.card-last-digits
         case "portal":
             return $('div.account-name-group').toArray();
