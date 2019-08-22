@@ -1,29 +1,27 @@
 $(document).ready(function(){
+    // Load account data if exists
     var accountNameData = JSON.parse(loadAccountNameData());
+
+    // Grab current url 
     var currentLocation = getCurrentLocation();
+
+    // Based on url, find accounts on page
     var accountNameGroupList = getAccountList(currentLocation);
 
     console.log("Found", accountNameGroupList.length, "accounts!", accountNameGroupList);
 
     changeAccountNames(accountNameGroupList, accountNameData);
 
-});
+    // After name changes, send list of accounts to background.js to send to popup.js
+    chrome.runtime.sendMessage({
+        message:"account_name_group_list",
+        data: {
+            accountNameGroupList: accountNameGroupList,
+            url: currentLocation
+        }
+    });
 
-/*************************** 
-        Listeners
- ***************************/
-chrome.runtime.onMessage.addListener(
-    function(request, sender, sendResponse) {
-      if( request.message === "clicked_browser_action" ) {
-        var firstHref = $("a[href^='http']").eq(0).attr("href");
-  
-        console.log(firstHref);
-  
-        // This line is new!
-        chrome.runtime.sendMessage({"message": "open_new_tab", "url": firstHref});
-      }
-    }
-  );
+});
 
 /**
  * When accountNameData exists, change account names contained in accountNameGroupList
@@ -58,6 +56,8 @@ function saveAccountNameData(obj) {
  */
 function loadAccountNameData() {
     return localStorage.saveData || null;
+    // For testing purposes
+    //return "{\"1234\":\"test-1\",\"5687\":\"test-2\",\"345\":\"test-3\",\"2345\":\"test-4\"}";
 }
 
 /**
