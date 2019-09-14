@@ -1,3 +1,7 @@
+'use strict';
+
+console.log('\'Allo \'Allo! Content script...test? ohhhhhh');
+
 var accountNameData;
 var currentLocation;
 var accountNameGroupList;

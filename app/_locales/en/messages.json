@@ -1,0 +1,10 @@
+{
+  "appName": {
+    "message": "discover account renamer",
+    "description": "The name of the application"
+  },
+  "appDescription": {
+    "message": "Instead of 'Savings Account (1234)'... How about 'Move Out Fund?' or maybe 'New PC?' With this extension, you can do that! Only works on Discover Savings accounts for now.",
+    "description": "The description of the application"
+  }
+}

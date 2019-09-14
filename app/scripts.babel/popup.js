@@ -1,3 +1,7 @@
+'use strict';
+
+console.log('\'Allo \'Allo! Popup');
+
 chrome.runtime.sendMessage({
     message: "account_name_group_list_request_popup"
 }, function(response){
