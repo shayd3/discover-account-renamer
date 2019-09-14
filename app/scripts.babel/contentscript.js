@@ -18,26 +18,11 @@ $(document).ready(function () {
 
     console.log("Found", accountNameGroupList.length, "accounts!", accountNameGroupList);
 
+    // Inject edit buttons next to accounts
+    injectButtons(accountNameGroupList, currentLocation);
+
     changeAccountNames(accountNameGroupList, accountNameData);
 });
-
-/***********************************
- *********** Listeners *************
- ***********************************/
-chrome.runtime.onMessage.addListener(
-    function (request, sender, sendResponse) {
-        // Listen for background.js message
-        if (request.message === "account_name_group_list_request") {
-            sendResponse({
-                message: "account_name_group_list",
-                data: {
-                    accountNameGroupList: accountNameGroupList,
-                    url: currentLocation
-                }
-            })
-        }
-    }
-);
 
 /**
  * When accountNameData exists, change account names contained in accountNameGroupList
@@ -118,4 +103,17 @@ function getAccountList(location) {
         default:
             return null;
     }
+}
+
+/**
+ * Inject edit buttons next to accounts
+ * @param {Object} accountList 
+ * @param {String} location 
+ */
+function injectButtons(accountList, location) {
+
+    $('.col-account-name').each(function(index){
+        $(this).append(`<div><input type="button" class="btn btn-primary" value="Edit" id="btn-edit-${index}" style="margin-top:5px;"/>`)
+    })
+    
 }
