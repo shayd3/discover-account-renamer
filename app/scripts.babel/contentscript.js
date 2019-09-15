@@ -1,7 +1,5 @@
 'use strict';
 
-console.log('\'Allo \'Allo! Content script...test? ohhhhhh');
-
 var accountNameData;
 var currentLocation;
 var accountNameGroupList;
@@ -132,6 +130,8 @@ function toggleEditAccountName(node, location){
     let $input = $('<input/>').val($el.text());
     $el.replaceWith($input);
 
+
+    // Add localStorage save here
     let save = function() {
         let $p = $elOriginal.text($input.val())
         $input.replaceWith( $p );
