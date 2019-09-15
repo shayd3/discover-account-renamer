@@ -19,7 +19,7 @@ $(document).ready(function () {
     console.log("Found", accountNameGroupList.length, "accounts!", accountNameGroupList);
 
     // Inject edit buttons next to accounts
-    injectButtons(accountNameGroupList, currentLocation);
+    injectEditButtons(accountNameGroupList, currentLocation);
 
     changeAccountNames(accountNameGroupList, accountNameData);
 });
@@ -106,14 +106,41 @@ function getAccountList(location) {
 }
 
 /**
- * Inject edit buttons next to accounts
+ * Inject edit buttons wuth event handlers next to accounts
  * @param {Object} accountList 
  * @param {String} location 
  */
-function injectButtons(accountList, location) {
+function injectEditButtons(accountList, location) {
 
     $('.col-account-name').each(function(index){
-        $(this).append(`<div><input type="button" class="btn btn-primary" value="Edit" id="btn-edit-${index}" style="margin-top:5px;"/>`)
+        $(this).append(`<input type="button" class="btn btn-primary" value="Edit" id="btn-edit-${index}" style="margin-top:5px;"/>`)
+        
+        // TODO: Turn account name node into input and vice versa. When done, save to local storage
+        $(`#btn-edit-${index}`).click(function(){ toggleEditAccountName($(this), location)});
     })
-    
+}
+
+/**
+ * From the context of the injected 'Edit' button, find the account name near the button and
+ * turn into input. Save account name on blur
+ * @param {Object} node 
+ * @param {String} location 
+ */
+function toggleEditAccountName(node, location){
+    let $elOriginal = node.siblings('a').children('.account-name-group').children('.account-name');
+    let $el = $elOriginal
+    let $input = $('<input/>').val($el.text());
+    $el.replaceWith($input);
+
+    let save = function() {
+        let $p = $elOriginal.text($input.val())
+        $input.replaceWith( $p );
+    };
+
+    $input.one('blur', save).focus();
+}
+
+function getAccountNameNode(node, location) {
+    let accountName = $(node).siblings('a').children('.account-name-group').children('.account-name').text()
+    console.log(accountName);
 }
