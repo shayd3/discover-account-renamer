@@ -1,39 +1,40 @@
 'use strict';
 
-var accountNameData;
-var currentLocation;
-var accountNameGroupList;
+var savedAccountNameData; // 4 digit account number:account name pair structure found in localstorage
+var currentLocation; // keyword describing page location
+var accountNameGroupList;// accountNameGroup dom nodes found on page
 
-$(document).ready(function () {
-    // Load account data if exists
-    accountNameData = JSON.parse(loadAccountNameData());
+$(document).ready(function() {
+    chrome.storage.sync.get(['saveData'], function(result) {
+        savedAccountNameData = result.saveData;
+        // Grab current url 
+        currentLocation = getCurrentLocation();
 
-    // Grab current url 
-    currentLocation = getCurrentLocation();
+        // Based on url, find accounts on page
+        accountNameGroupList = getAccountList(currentLocation);
 
-    // Based on url, find accounts on page
-    accountNameGroupList = getAccountList(currentLocation);
-
-    console.log("Found", accountNameGroupList.length, "accounts!", accountNameGroupList);
-
-    // Inject edit buttons next to accounts
-    injectEditButtons(accountNameGroupList, currentLocation);
-
-    changeAccountNames(accountNameGroupList, accountNameData);
+        console.log("Found", accountNameGroupList.length, "accounts!", accountNameGroupList);
+        
+        // Inject edit buttons next to accounts
+        injectEditButtons(accountNameGroupList, currentLocation);
+        
+        // Change Account Names
+        changeAccountNames(accountNameGroupList, savedAccountNameData);
+    });
 });
 
 /**
- * When accountNameData exists, change account names contained in accountNameGroupList
+ * When savedAccountNameData exists, change account names contained in accountNameGroupList
  * @param {string[]} accountNameGroupList 
- * @param {object} accountNameData 
+ * @param {object} savedAccountNameData 
  */
-function changeAccountNames(accountNameGroupList, accountNameData) {
-    if (accountNameData != null) {
+function changeAccountNames(accountNameGroupList, savedAccountNameData) {
+    if (savedAccountNameData != null) {
         for (let i = 0; i < accountNameGroupList.length; i++) {
             let accountNumber = $(accountNameGroupList[i]).children('p.card-last-digits').text().replace('(', '').replace(')', '').trim();
             console.log("accountNumber", accountNumber);
-            if (accountNameData[accountNumber]) {
-                $(accountNameGroupList[i]).children('p.account-name').text(accountNameData[accountNumber])
+            if (savedAccountNameData[accountNumber]) {
+                $(accountNameGroupList[i]).children('p.account-name').text(savedAccountNameData[accountNumber])
             }
 
         }
@@ -46,17 +47,13 @@ function changeAccountNames(accountNameGroupList, accountNameData) {
 // This will be in popup.js
 // Popup.js should probably include reset individual, reset all
 function saveAccountNameData(obj) {
-    saveData = obj;
-    localStorage.saveData = JSON.stringify(saveData);
-}
+    chrome.storage.sync.clear(function() {
+        console.log("sync storage cleared");
+    })
+    chrome.storage.sync.set({"saveData": obj}, function(){
+        console.log("Successfully saved account name data!", obj);
+    })
 
-/**
- * When page loads, load saveData object from localStorage
- */
-function loadAccountNameData() {
-    //return localStorage.saveData || null;
-    // For testing purposes
-    return "{\"8139\":\"test-1\",\"5309\":\"test-2\",\"3168\":\"test-3\",\"8798\":\"test-4\"}";
 }
 
 /**
@@ -111,7 +108,7 @@ function getAccountList(location) {
 function injectEditButtons(accountList, location) {
 
     $('.col-account-name').each(function(index){
-        $(this).append(`<input type="button" class="btn btn-primary" value="Edit" id="btn-edit-${index}" style="margin-top:5px;"/>`)
+        $(this).append(`<input type="button" class="btn btn-primary" value="Edit" id="btn-edit-${index}" data-index="${index}" style="margin-top:5px;"/>`)
         
         // TODO: Turn account name node into input and vice versa. When done, save to local storage
         $(`#btn-edit-${index}`).click(function(){ toggleEditAccountName($(this), location)});
@@ -131,16 +128,48 @@ function toggleEditAccountName(node, location){
     $el.replaceWith($input);
 
 
-    // Add localStorage save here
+    // clear and save to localstorage each time
     let save = function() {
         let $p = $elOriginal.text($input.val())
         $input.replaceWith( $p );
+
+        // Regenerate accountNameGroupList
+        accountNameGroupList = getAccountList(currentLocation);
+        let savedDataJson = generateDigitAccountNamePair(accountNameGroupList, location);
+        saveAccountNameData(savedDataJson);
     };
 
     $input.one('blur', save).focus();
 }
 
-function getAccountNameNode(node, location) {
-    let accountName = $(node).siblings('a').children('.account-name-group').children('.account-name').text()
-    console.log(accountName);
+function generateDigitAccountNamePair(accountNameGroupList, location) {
+    console.log("Inside of generateDigitAccountNamePair",accountNameGroupList, location)
+    let obj = {}
+    switch(location){
+        case "portal":
+            for(let i = 0; i < accountNameGroupList.length; i++) {
+                let accountName = $(accountNameGroupList[i]).children('.account-name').text().trim()
+                let accountNumber = $(accountNameGroupList[i]).children('.card-last-digits').text().replace('(', '').replace(')', '').trim()
+                obj[accountNumber] = accountName;
+            }
+            console.log("generate obj", obj)
+            return obj;
+            break;
+        default:
+            console.log("You are in a location with no account lists!")
+
+    }
+
 }
+
+chrome.storage.onChanged.addListener(function(changes, namespace) {
+    for (var key in changes) {
+      var storageChange = changes[key];
+      console.log('Storage key "%s" in namespace "%s" changed. ' +
+                  'Old value was "%s", new value is "%s".',
+                  key,
+                  namespace,
+                  storageChange.oldValue,
+                  storageChange.newValue);
+    }
+  });
