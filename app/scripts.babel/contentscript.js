@@ -108,7 +108,7 @@ function getAccountList(location) {
 function injectEditButtons(accountList, location) {
 
     $('.col-account-name').each(function(index){
-        $(this).append(`<input type="button" class="btn btn-primary" value="Edit" id="btn-edit-${index}" data-index="${index}" style="margin-top:5px;"/>`)
+        $(this).append(`<input type="button" class="btn btn-primary" value="Edit" id="btn-edit-${index}" data-index="${index}" style="margin-top:5px;" edit-toggle="false"/>`)
         
         // TODO: Turn account name node into input and vice versa. When done, save to local storage
         $(`#btn-edit-${index}`).click(function(){ toggleEditAccountName($(this), location)});
@@ -122,11 +122,23 @@ function injectEditButtons(accountList, location) {
  * @param {String} location 
  */
 function toggleEditAccountName(node, location){
+    // Button Value = Edit
+    if($(node).attr("edit-toggle") === "false") {
+        // Set edit-toggle to true
+        $(node).attr("edit-toggle", true)
+        $(node).val("Confirm")
+    } else {
+        $(node).attr("edit-toggle", false)
+        $(node).val("Edit")
+        $(node).one('click', save).focus()
+    }
+
     let $elOriginal = node.siblings('a').children('.account-name-group').children('.account-name');
     let $el = $elOriginal
     let $input = $('<input/>').val($el.text());
-    $el.replaceWith($input);
 
+    if($(node).attr("edit-toggle") === "true")
+        $el.replaceWith($input);
 
     // clear and save to localstorage each time
     let save = function() {
@@ -139,11 +151,14 @@ function toggleEditAccountName(node, location){
         saveAccountNameData(savedDataJson);
     };
 
-    $input.one('blur', save).focus();
+    $input.one('blur', function() {
+        $(node).attr("edit-toggle", false)
+        $(node).val("Edit")
+        save();
+    }).focus();
 }
 
 function generateDigitAccountNamePair(accountNameGroupList, location) {
-    console.log("Inside of generateDigitAccountNamePair",accountNameGroupList, location)
     let obj = {}
     switch(location){
         case "portal":
@@ -152,7 +167,6 @@ function generateDigitAccountNamePair(accountNameGroupList, location) {
                 let accountNumber = $(accountNameGroupList[i]).children('.card-last-digits').text().replace('(', '').replace(')', '').trim()
                 obj[accountNumber] = accountName;
             }
-            console.log("generate obj", obj)
             return obj;
             break;
         default:
