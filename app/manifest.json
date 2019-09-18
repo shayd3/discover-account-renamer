@@ -1,6 +1,6 @@
 {
   "name": "__MSG_appName__",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "manifest_version": 2,
   "description": "__MSG_appDescription__",
   "icons": {
@@ -16,21 +16,16 @@
     ]
   },
   "permissions": [
-    "http://*/*",
-    "https://*/*",
+    "https://portal.discover.com/customersvcs/portal/summary",
+    "https://portal.discover.com/dfs/accounthome/portal*",
+    "https://card.discover.com/cardmembersvcs/achome/homepage*",
+    "https://bank.discover.com/bankac*",
     "background",
     "storage",
     "webNavigation"
   ],
   "content_scripts": [
     {
-      "matches": [
-        "https://portal.discover.com/customersvcs/portal/summary",
-        "https://portal.discover.com/dfs/accounthome/portal*",
-        "https://card.discover.com/cardmembersvcs/achome/homepage*",
-        "https://bank.discover.com/bankac*",
-        "file:///home/ross/Desktop/discover-portal.html*"
-      ],
       "js": [
         "libs/jquery-3.3.1.slim.min.js",
         "scripts/contentscript.js"
