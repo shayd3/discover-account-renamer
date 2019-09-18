@@ -9,6 +9,7 @@ $(document).ready(function() {
         savedAccountNameData = result.saveData;
         // Grab current url 
         currentLocation = getCurrentLocation();
+        console.log("Current Location:", currentLocation);
 
         // Based on url, find accounts on page
         accountNameGroupList = getAccountList(currentLocation);
@@ -31,13 +32,30 @@ $(document).ready(function() {
 function changeAccountNames(accountNameGroupList, savedAccountNameData) {
     if (savedAccountNameData != null) {
         for (let i = 0; i < accountNameGroupList.length; i++) {
-            let accountNumber = $(accountNameGroupList[i]).children('p.card-last-digits').text().replace('(', '').replace(')', '').trim();
+            let accountNumber = extractLastFourDigitAccountNumber($(accountNameGroupList[i]))
             console.log("accountNumber", accountNumber);
             if (savedAccountNameData[accountNumber]) {
                 $(accountNameGroupList[i]).children('p.account-name').text(savedAccountNameData[accountNumber])
             }
 
         }
+    }
+}
+
+/**
+ * Based on currentLocation, extract the account numbers displayed on the page
+ * @param {object} obj 
+ */
+function extractLastFourDigitAccountNumber(accountNameGroup) {
+    switch(currentLocation) {
+        case "portal":
+            return $(accountNameGroup).children('p.card-last-digits').text().replace('(', '').replace(')', '').trim();
+            break;
+        case "cardmembersvcs":
+            return $(accountNameGroup).find('.card-name').text()
+            break;
+        case "bankac":
+            break;
     }
 }
 
@@ -91,6 +109,8 @@ function getAccountList(location) {
             break;
         // TODO - Credit Card page
         case "cardmembersvcs":
+            // Select accounts from accounts drop down, skip first placeholder
+            return $('.card-info').slice(1)
             break;
         // TODO - Savings Account page
         case "bankac":
@@ -176,6 +196,9 @@ function generateDigitAccountNamePair(accountNameGroupList, location) {
 
 }
 
+/**
+ * Debugger for chrome.storage api. Detects any changes that happen to chrome.storage
+ */
 chrome.storage.onChanged.addListener(function(changes, namespace) {
     for (var key in changes) {
       var storageChange = changes[key];
